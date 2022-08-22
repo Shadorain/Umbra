@@ -1,0 +1,12 @@
+[package]
+name = "umbra"
+version = "0.1.0"
+edition = "2021"
+authors = ["Shadorain"]
+repository = "https://github.com/Shadorain/Umbra"
+description = "** Umbra TUI Framework: a simple yet highly configurable framework to generate flexible and fast TUIs **"
+readme = "README.md"
+license = "BSD-3-Clause"
+categories = ["command-line-utilities", "command-line-interface", "text-editors"]
+
+[dependencies]
