@@ -1,0 +1,48 @@
+@document.meta
+title: Structure
+description: Internal program structure documentation of Umbra TUI Framework
+authors: Shadorain
+categories: docs
+created: 2022-07-23
+version: 0.0.11
+@end
+
+= TOC
+
+* Ideas
+** Screen
+*** trait Component
+    > A component is a single element that can be displayed on a screen
+    - render
+    - handle_event
+* Goals
+  - Avoid panicking at high costs
+  - FAST, Flexible, and highly customizable
+  - Fluidly integrate into another project
+  - Asynchronous
+* Scratch
+  Umbra could be the main context component that the user will initialize
+  and interact with directly.
+* TODO
+  - [-] Documentation
+* Project Structures
+** Umbra
+   Link: {@ ../src/umbra.rs}[Umbra.rs]
+*** Enums
+*** Errors
+*** Functions
+*** Fields
+*** Methods
+**** new
+     > Creates a new Umbra context
+     $ Return:
+     - `Result<Self>`
+*** Traits
+** Terminal
+   Link: {@ ../src/terminal.rs}[Terminal.rs]
+*** Enums
+*** Errors
+*** Functions
+*** Fields
+*** Methods
+*** Traits

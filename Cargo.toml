@@ -6,7 +6,20 @@ authors = ["Shadorain"]
 repository = "https://github.com/Shadorain/Umbra"
 description = "** Umbra TUI Framework: a simple yet highly configurable framework to generate flexible and fast TUIs **"
 readme = "README.md"
-license = "BSD-3-Clause"
+license = "GPL-3.0"
 categories = ["command-line-utilities", "command-line-interface", "text-editors"]
 
+[lib]
+name = "umbra"
+path = "src/lib.rs"
+
+[[bin]]
+name = "document"
+path = "src/bin/document.rs"
+
 [dependencies]
+# Utility
+thiserror = "1.0"
+
+# Terminal Interface
+crossterm = "0.25.0"
