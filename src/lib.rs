@@ -22,8 +22,13 @@
 //! }
 //!
 //! ```
-mod umbra;
-pub use umbra::{UResult, Umbra};
+mod screen;
 
-mod terminal;
-pub use terminal::IEvent;
+mod umbra;
+pub use umbra::{UError, UResult, Umbra};
+
+mod event;
+pub use event::{IEvent, Key, KeyModifiers, MediaKey};
+
+mod backend;
+pub use backend::{Backend, BackendSetter, BResult, BError};

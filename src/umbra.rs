@@ -1,37 +1,51 @@
 use thiserror::Error;
 
-use crate::terminal::{IEvent, TermError, Terminal};
+use crate::{backend, Backend, BackendSetter, BError, IEvent, BResult};
 
 #[derive(Error, Debug)]
 pub enum UError {
-    #[error("Terminal: {0}")]
-    Terminal(TermError),
+    #[error("Internal backend error: {0}")]
+    Backend(BError),
 }
 
-impl From<TermError> for UError {
-    fn from(err: TermError) -> UError {
-        UError::Terminal(err)
+impl From<BError> for UError {
+    fn from(err: BError) -> UError {
+        UError::Backend(err)
     }
 }
 
 pub type UResult<T> = std::result::Result<T, UError>;
 
 pub struct Umbra {
-    term: Terminal,
+    backend: Box<dyn Backend>,
 }
 
 impl Umbra {
-    pub fn new() -> UResult<Self> {
-        Ok(Self {
-            term: Terminal::new()?,
-        })
-    }
-
-    pub fn init(&mut self) -> UResult<()> {
-        Ok(self.term.init()?)
+    pub fn new() -> Self {
+        Self {
+            backend: Box::new(backend::CrosstermBackend::new()),
+        }
     }
 
     pub fn read_event(&mut self) -> UResult<IEvent> {
-        Ok(self.term.read_event()?)
+        Ok(self.backend.read_event()?)
+    }
+}
+
+impl Default for Umbra {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl BackendSetter for Umbra {
+    fn set_crossterm(&mut self) -> BResult<()> {
+        self.backend = Box::new(backend::CrosstermBackend::new());
+        backend::CrosstermBackend::init()?;
+        Ok(())
+    }
+    fn set_custom(&mut self, backend: impl Backend + 'static) -> BResult<()> {
+        self.backend = Box::new(backend);
+        Ok(())
     }
 }
