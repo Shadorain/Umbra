@@ -8,6 +8,26 @@ description = "** Umbra TUI Framework: a simple yet highly configurable framewor
 readme = "README.md"
 license = "GPL-3.0"
 categories = ["command-line-utilities", "command-line-interface", "text-editors"]
+keywords = ["TUI", "UI"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[dependencies]
+# Utility
+bitflags = "1.3.2"
+thiserror = "1.0"
+cfg-if = "1.0.0"
+log = "0.4.17"
+
+# Terminal Interface
+[dependencies.crossterm]
+optional = true
+version = "0.25.0"
+
+[features]
+default = ["crossterm-backend"]
+crossterm-backend = ["crossterm"]
 
 [lib]
 name = "umbra"
@@ -16,11 +36,4 @@ path = "src/lib.rs"
 [[bin]]
 name = "document"
 path = "src/bin/document.rs"
-
-[dependencies]
-# Utility
-bitflags = "1.3.2"
-thiserror = "1.0"
-
-# Terminal Interface
-crossterm = "0.25.0"
+required-features = ["crossterm-backend"]

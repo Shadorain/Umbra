@@ -1,3 +1,8 @@
+//! # Crossterm Backend
+//! 
+//! Requires feature `crossterm-backend`
+#![cfg(feature = "crossterm")]
+
 pub use crossterm::cursor::CursorShape;
 use crossterm::{cursor as c, event as e, queue, style as s, terminal as t};
 use std::io::{BufWriter, Stdout, Write};
@@ -82,39 +87,46 @@ pub struct CrosstermBackend {
 
 #[allow(unused)]
 impl CrosstermBackend {
-    pub fn new() -> Self {
+    fn new() -> Self {
         CrosstermBackend {
             buffer: BufWriter::new(std::io::stdout()),
         }
     }
 
-    pub fn init() -> BResult<()> {
-        queue!(std::io::stdout(), t::EnterAlternateScreen, s::ResetColor, t::Clear(t::ClearType::All))?;
+    pub fn init() -> BResult<Self> {
+        let mut backend = CrosstermBackend::new();
+        queue!(backend.buffer,
+            t::EnterAlternateScreen,
+            s::ResetColor,
+            t::Clear(t::ClearType::All),
+            e::EnableMouseCapture,
+            e::EnableFocusChange,
+        )?;
         t::enable_raw_mode()?;
-        Ok(())
+        Ok(backend)
     }
 
     /// Queues the current line to be cleared
-    pub fn clear_line(&mut self) -> BResult<()> {
+    fn clear_line(&mut self) -> BResult<()> {
         Ok(queue!(self.buffer, t::Clear(t::ClearType::CurrentLine))?)
     }
 
-    pub fn fg_set(&mut self, rgb: Rgb) -> BResult<()> {
+    fn fg_set(&mut self, rgb: Rgb) -> BResult<()> {
         Ok(queue!(self.buffer, s::SetForegroundColor(rgb.into()))?)
     }
-    pub fn bg_set(&mut self, rgb: Rgb) -> BResult<()> {
+    fn bg_set(&mut self, rgb: Rgb) -> BResult<()> {
         Ok(queue!(self.buffer, s::SetBackgroundColor(rgb.into()))?)
     }
     #[allow(unused)]
-    pub fn fg_reset(&mut self) -> BResult<()> {
+    fn fg_reset(&mut self) -> BResult<()> {
         Ok(queue!(self.buffer, s::SetForegroundColor(s::Color::Reset))?)
     }
     #[allow(unused)]
-    pub fn bg_reset(&mut self) -> BResult<()> {
+    fn bg_reset(&mut self) -> BResult<()> {
         Ok(queue!(self.buffer, s::SetBackgroundColor(s::Color::Reset))?)
     }
     #[allow(unused)]
-    pub fn color_reset(&mut self) -> BResult<()> {
+    fn color_reset(&mut self) -> BResult<()> {
         Ok(queue!(self.buffer, s::ResetColor)?)
     }
 }
@@ -123,7 +135,13 @@ impl Drop for CrosstermBackend {
     /// If the backend is dropped, we want to make sure that we leave the alternate screen
     /// Will panic if fails
     fn drop(&mut self) {
-        queue!(self.buffer, s::ResetColor, c::Show, t::LeaveAlternateScreen).unwrap();
+        queue!(self.buffer,
+            s::ResetColor,
+            c::Show,
+            t::LeaveAlternateScreen,
+            e::DisableMouseCapture,
+            e::DisableFocusChange,
+        ).unwrap();
         self.buffer.flush().unwrap();
         t::disable_raw_mode().unwrap();
     }

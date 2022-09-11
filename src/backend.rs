@@ -9,11 +9,13 @@ use crate::{screen::{Size, Point}, IEvent};
 #[derive(Error, Debug)]
 pub enum BError {
     #[error("Failure to run command: {0:?}")]
-    Backend(io::Error),
+    Internal(io::Error),
+    #[error("No backend exists")]
+    NoBackend,
 }
 impl From<io::Error> for BError {
     fn from(err: io::Error) -> BError {
-        BError::Backend(err)
+        BError::Internal(err)
     }
 }
 

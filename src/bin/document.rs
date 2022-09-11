@@ -1,4 +1,4 @@
-use umbra::{IEvent, Umbra, UError, Key, KeyModifiers, BackendSetter};
+use umbra::{IEvent, Umbra, UError, Key, KeyModifiers};
 
 // struct Document {
 //     title: &str,
@@ -6,8 +6,7 @@ use umbra::{IEvent, Umbra, UError, Key, KeyModifiers, BackendSetter};
 
 /// Will be a simple example of rendering a Document with Umbra
 fn main() -> Result<(), UError> {
-    let mut umbra: Umbra = Umbra::new();//.config(serialized_data);
-    umbra.set_crossterm()?;
+    let mut umbra: Umbra = Umbra::new()?;//.config(serialized_data);
 
     loop {
         match umbra.read_event()? {
