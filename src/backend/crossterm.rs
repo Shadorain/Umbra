@@ -3,12 +3,13 @@
 //! Requires feature `crossterm-backend`
 #![cfg(feature = "crossterm")]
 
+use crossterm::{cursor as c, event as e, queue, style as s, terminal as t, execute};
 pub use crossterm::cursor::CursorShape;
-use crossterm::{cursor as c, event as e, queue, style as s, terminal as t};
 use std::io::{BufWriter, Stdout, Write};
+use std::time::Duration;
 
 use crate::event::{KeyModifiers, MediaKey};
-use crate::screen::{Point, Size};
+use crate::screen::{Point, Size, DrawBuffer};
 use crate::{IEvent, Key};
 
 use super::{BResult, Backend};
@@ -151,15 +152,18 @@ impl Backend for CrosstermBackend {
     /// Reads and returns an Event from the terminal
     /// Handles resize events automatically
     /// NOTE: Handles Mouse and Resize events from here
-    fn read_event(&mut self) -> BResult<IEvent> {
-        Ok(match e::read()? {
-            e::Event::Key(key) => IEvent::Key(key.modifiers.into(), key.code.into()),
-            e::Event::Mouse(mouse) => IEvent::Mouse(Point::from((mouse.column, mouse.row))),
-            e::Event::Resize(x, y) => IEvent::Resize((x, y).into()),
-            e::Event::Paste(s) => IEvent::Paste(s),
-            e::Event::FocusGained => IEvent::FocusGained,
-            e::Event::FocusLost => IEvent::FocusLost,
-        })
+    fn read_event(&mut self) -> BResult<Option<IEvent>> {
+        match e::poll(Duration::from_micros(100)) {
+            Ok(true) => Ok(Some(match e::read()? {
+                e::Event::Key(key) => IEvent::Key(key.modifiers.into(), key.code.into()),
+                e::Event::Mouse(mouse) => IEvent::Mouse(Point::from((mouse.column, mouse.row))),
+                e::Event::Resize(x, y) => IEvent::Resize((x, y).into()),
+                e::Event::Paste(s) => IEvent::Paste(s),
+                e::Event::FocusGained => IEvent::FocusGained,
+                e::Event::FocusLost => IEvent::FocusLost,
+            })),
+            _ => Ok(None)
+        }
     }
 
     /// Refreshes the screen
@@ -167,7 +171,22 @@ impl Backend for CrosstermBackend {
         Ok(self.buffer.flush()?)
     }
 
-    /// Gets the current size of the screen
+    /// Draws to the screen at the given position
+    ///
+    /// * `pos`: Position to draw to
+    /// * `buf`: DrawBuffer item to draw
+    fn draw_at(&mut self, pos: Point, buf: DrawBuffer) -> BResult<()> {
+        Ok(queue!(self.buffer, c::MoveTo(pos.x, pos.y), s::Print(buf))?)
+    }
+
+    /// Sets the window's title
+    ///
+    /// * `title`: &str to set, must live long enough
+    fn set_title(&mut self, title: &str) -> BResult<()> {
+        Ok(execute!(self.buffer, t::SetTitle(title))?)
+    }
+
+    /// Returns the current size of the screen
     fn screen_size(&mut self) -> Size {
         t::size().unwrap_or_default().into()
     }

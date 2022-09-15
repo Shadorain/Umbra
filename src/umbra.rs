@@ -27,8 +27,12 @@ impl Umbra {
         })
     }
 
-    pub fn read_event(&mut self) -> UResult<IEvent> {
+    pub fn read_event(&mut self) -> UResult<Option<IEvent>> {
         Ok(self.backend.read_event()?)
+    }
+
+    pub fn set_title(&mut self, title: &'static str) -> UResult<()> {
+        Ok(self.backend.set_title(title)?)
     }
 
     fn try_backend() -> BResult<Box<dyn Backend>> {

@@ -4,7 +4,7 @@ use thiserror::Error;
 mod crossterm;
 pub use self::crossterm::{CrosstermBackend, CursorShape};
 
-use crate::{screen::{Size, Point}, IEvent};
+use crate::{screen::{Size, Point, DrawBuffer}, IEvent};
 
 #[derive(Error, Debug)]
 pub enum BError {
@@ -22,9 +22,12 @@ impl From<io::Error> for BError {
 pub type BResult<T> = std::result::Result<T, BError>;
 
 pub trait Backend {
-    fn read_event(&mut self) -> BResult<IEvent>;
+    fn read_event(&mut self) -> BResult<Option<IEvent>>;
     fn refresh(&mut self) -> BResult<()>;
 
+    fn draw_at(&mut self, pos: Point, buf: DrawBuffer) -> BResult<()>;
+
+    fn set_title(&mut self, title: &str) -> BResult<()>;
     fn screen_size(&mut self) -> Size;
     fn screen_clear(&mut self) -> BResult<()>;
 

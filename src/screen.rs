@@ -1,6 +1,8 @@
-// mod draw;
+mod draw;
 // mod pane;
 // mod workspace;
+
+pub use draw::DrawBuffer;
 
 // use std::collections::{HashMap, VecDeque};
 // use thiserror::Error;
