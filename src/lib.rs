@@ -10,6 +10,7 @@
 //! /// setting up the screen and raw mode
 //! /// Will use first included backend as well by default.
 //! let mut umbra: Umbra = Umbra::new();
+//! umbra.set_title("Umbra TUI!")?;
 //! 
 //! loop {
 //!     Some(event) => match event {
@@ -21,7 +22,7 @@
 //!         IEvent::FocusLost => print!("Window lost focus"),
 //!     },
 //!     None => (),
-//!     umbra.refresh();
+//!     // umbra.refresh(); // Not yet implemented
 //! }
 //!
 //! ```

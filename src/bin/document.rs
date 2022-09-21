@@ -8,7 +8,7 @@ impl Document {
     fn new(title: &'static str) -> Self { Self { title } }
 }
 
-/// Will be a simple example of rendering a Document with Umbra
+/// A simple example of rendering a Document with Umbra
 fn main() -> Result<(), UError> {
     let mut umbra: Umbra = Umbra::new()?;//.config(serialized_data);
     let document = Document::new("Document #1");
