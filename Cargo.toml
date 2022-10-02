@@ -19,6 +19,8 @@ bitflags = "1.3.2"
 thiserror = "1.0"
 cfg-if = "1.0.0"
 log = "0.4.17"
+hecs = { version = "0.9.0", features = ["macros"] }
+hecs-hierarchy = "0.11.7"
 
 # Terminal Interface
 [dependencies.crossterm]
@@ -37,3 +39,9 @@ path = "src/lib.rs"
 name = "document"
 path = "src/bin/document.rs"
 required-features = ["crossterm-backend"]
+
+[profile.bench]
+debug = true
+
+[profile.release]
+debug = true

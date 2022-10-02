@@ -30,6 +30,7 @@
 //! ```
 mod components;
 mod screen;
+mod ecs;
 
 mod umbra;
 pub use umbra::{UError, UResult, Umbra};
