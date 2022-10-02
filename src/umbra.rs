@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::{backend, Backend, backend::BackendSetter, BError, IEvent, BResult};
+use crate::{backend, backend::BackendSetter, BError, BResult, Backend, IEvent};
 
 #[derive(Error, Debug)]
 pub enum UError {
@@ -35,7 +35,7 @@ impl Umbra {
 
     /// Reads an event, Some(e) if found, None otherwise
     /// Calls internal Backend
-    pub fn read_event(&mut self) -> UResult<Option<IEvent>> {
+    pub fn read_input(&mut self) -> UResult<Option<IEvent>> {
         Ok(self.backend.read_event()?)
     }
 

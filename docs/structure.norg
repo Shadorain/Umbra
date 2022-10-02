@@ -9,16 +9,95 @@ version: 0.0.11
 
 = TOC
 
+NEEDS UPDATING
+
 * Ideas
+** User API
+   @code rust
+    let mut umbra: Umbra = Umbra::new()?;//.config(serialized_data);
+    umbra.set_title("My User Code")?;
+
+    // Main executive loop
+    loop {
+        if let Some(event) = umbra.read_input()? {
+            match event {
+                IEvent::Key(modif, key) => if key == Key::Char('q') && modif == KeyModifiers::CONTROL { break; },
+                IEvent::Mouse(m) => println!("Mouse ptr: ({0}, {1})\r", m.x, m.y),
+                IEvent::Resize(r) => println!("Screen has been resized to: ({0}, {1})\r", r.x, r.y),
+                IEvent::Paste(s) => print!("Paste {0}\r", s),
+                IEvent::FocusGained => print!("Window gained focus\r"),
+                IEvent::FocusLost => print!("Window lost focus\r"),
+            }
+        }
+        umbra.refresh();
+    }
+   @end
 ** Screen
-*** trait Component
-    > A component is a single element that can be displayed on a screen
-    - render
+   Screen can be a top level hierarchy entity type?
+*** trait Element
+    > An element is a single component that can be displayed on a screen
+    - draw
     - handle_event
+** Modules
+*** Draw
+    $ Purpose
+    Handle strictly drawing elements.
+    Can know about Components and Entities in order to do so,
+    but a potentially limitted view on these and definitely not
+    a mutable view.
+*** ECS
+    $ Purpose
+    To provide an API for both Umbra and users to add components and entities
+    (maybe even systems?).
+
+    $ Questions
+    Who will hold the World? One or Multiple?
+*** Screen
+    TODO
+*** Events
+*** Backend
+    $ Purpose
+    Strictly handles terminal procedures at the lowest level (atleast that Umbra
+    will go). Users will have access to some Backend features, mainly just setting
+    custom ones / selecting predefined, or specific terminal setup.
+** Entity Component System
+*** Bundles
+    Will add small bundles of components for typical use cases
+    - ElementBundle
+    -- visible
+    -- geometry
+    -- position
+*** Component Ideas
+    - Tags (Component with no data)
+    -- Renderable
+    -- Tileable
+    -- Resizeable
+    -- Focusable
+    -- Hideable
+    - Geometry(x, y)
+    - Alignment(Align)
+    -- Align::Left
+    -- Align::Right
+    -- Align::Top
+    -- Align::Bottom
+    -- Align::Center
+    - Padding(t, b, l, r)
+    - Margin(t, b, l, r)
+    - Border(BorderStyle)
+    -- BorderStyle::Single
+    -- BorderStyle::Rounded
+    -- BorderStyle::Double
+    -- BorderStyle::Thick
+    - Title(&'static str)
+*** Entities
+    Some entities will be screen elements
+    They will implement the Element trait.
+    Others dont have to.
 * Goals
   - Avoid panicking at high costs
   - FAST, Flexible, and highly customizable
   - Fluidly integrate into another project
+  - Data oriented approach
   - Asynchronous
 * Scratch
   Umbra could be the main context component that the user will initialize

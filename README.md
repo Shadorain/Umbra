@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="res/umbra-logo_cropped.png" width=300>
+<img src="res/umbra-logo-cropped-transparent.png" width=300>
 
 <a href="https://docs.rs/umbra-tui/0.1.0/umbra/"> ![Docs](https://img.shields.io/docsrs/umbra-tui?color=37d4a7&logo=rust&style=for-the-badge)</a>
 <a href="https://crates.io/crates/umbra-tui"> ![Crate](https://img.shields.io/crates/v/umbra-tui?color=ff4971&style=for-the-badge)</a>

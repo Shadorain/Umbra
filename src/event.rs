@@ -2,8 +2,18 @@ use bitflags::bitflags;
 
 use crate::screen::{Point, Size};
 
-/// Event is a wrapper around crossterm's Event enum
-/// NOTE: Resize taken out because it should be handled immediately
+/// # Umbra Events
+///
+/// All events that can happen while running Umbra.
+pub enum UEvent {
+    Input(IEvent),
+    Screen(SEvent),
+}
+
+/// Screen events
+pub enum SEvent {}
+
+/// Input events
 pub enum IEvent {
     Key(KeyModifiers, Key),
     Mouse(Point),

@@ -13,19 +13,22 @@
 //! umbra.set_title("Umbra TUI!")?;
 //! 
 //! loop {
-//!     Some(event) => match event {
-//!         IEvent::Key(modif, key) => if key == Key::Char('q') && modif == KeyModifiers::CONTROL { break; },
-//!         IEvent::Mouse(m) => println!("Mouse ptr: ({0}, {1})", m.x, m.y),
-//!         IEvent::Resize(r) => println!("Screen has been resized to: ({0}, {1})", r.x, r.y),
-//!         IEvent::Paste(s) => print!("Paste {0}", s),
-//!         IEvent::FocusGained => print!("Window gained focus"),
-//!         IEvent::FocusLost => print!("Window lost focus"),
-//!     },
-//!     None => (),
+//!     if let Some(event) = umbra.read_input()? {
+//!         match event {
+//!             // Quit on `C-q` keypress
+//!             IEvent::Key(modif, key) => if key == Key::Char('q') && modif == KeyModifiers::CONTROL { break; },
+//!             IEvent::Mouse(m) => println!("Mouse ptr: ({0}, {1})\r", m.x, m.y),
+//!             IEvent::Resize(r) => println!("Screen has been resized to: ({0}, {1})\r", r.x, r.y),
+//!             IEvent::Paste(s) => println!("Paste {0}\r", s),
+//!             IEvent::FocusGained => println!("Window gained focus\r"),
+//!             IEvent::FocusLost => println!("Window lost focus\r"),
+//!         }
+//!     }
 //!     // umbra.refresh(); // Not yet implemented
 //! }
 //!
 //! ```
+mod components;
 mod screen;
 
 mod umbra;
