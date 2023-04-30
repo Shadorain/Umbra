@@ -10,3 +10,4 @@ license = "BSD-3-Clause"
 categories = ["command-line-utilities", "command-line-interface", "text-editors"]
 
 [dependencies]
+crossterm = "0.25.0"
