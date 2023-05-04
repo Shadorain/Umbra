@@ -10,4 +10,15 @@ license = "BSD-3-Clause"
 categories = ["command-line-utilities", "command-line-interface", "text-editors"]
 
 [dependencies]
-crossterm = "0.25.0"
+bevy_ecs = "0.10.1"
+bitflags = "2.2.1"
+thiserror = "1.0.40"
+cfg-if = "1.0.0"
+
+[dependencies.crossterm]
+optional = true
+version = "0.26.1"
+
+[features]
+default = ["crossterm-backend"]
+crossterm-backend = ["crossterm"]

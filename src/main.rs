@@ -1,33 +1,61 @@
-use std::io::{stdout, BufWriter, Stdout};
+#![allow(dead_code)]
+use bevy_ecs::prelude::*;
 
-use crossterm::{event as e, queue, style as s, terminal as t, Result};
+mod backend;
+use backend::{Backend, CrosstermBackend, Point, Size};
+mod event;
+use event::{IEvent, Key, KeyModifiers};
 
-pub struct Terminal {
-    buffer: BufWriter<Stdout>,
+#[derive(Component)]
+pub struct Visible;
+
+#[derive(Component)]
+pub struct Tile;
+
+#[derive(Bundle)]
+pub struct Renderable {
+    visible: Visible,
 }
 
-impl Terminal {
+#[derive(Default)]
+struct Umbra {
+    pub world: World,
+    pub schedule: Schedule,
+
+    pub backend: CrosstermBackend,
+}
+
+impl Umbra {
     pub fn new() -> Self {
-        Terminal {
-            buffer: BufWriter::new(stdout()),
+        Self::default()
+    }
+    pub fn read_event(&self) -> Option<IEvent> {
+        self.backend.read_event().unwrap()
+    }
+}
+
+fn main() -> std::io::Result<()> {
+    let mut umbra = Umbra::new();
+
+    loop {
+        umbra.backend.draw_at((0, 0), "test").unwrap();
+
+        if let Some(event) = umbra.read_event() {
+            match event {
+                // Quit on `C-q` keypress
+                IEvent::Key(modif, key) => {
+                    if key == Key::Char('q') && modif == KeyModifiers::CONTROL {
+                        break;
+                    }
+                }
+                IEvent::Mouse(_) => (),
+                IEvent::Paste(s) => println!("Paste {0}\r", s),
+                IEvent::Resize(r) => println!("Screen has been resized to: ({0}, {1})\r", r.x, r.y),
+                IEvent::FocusGained => println!("Window gained focus\r"),
+                IEvent::FocusLost => println!("Window lost focus\r"),
+            }
         }
     }
-    fn init(&mut self) -> Result<()> {
-        queue!(
-            self.buffer,
-            t::EnterAlternateScreen,
-            s::ResetColor,
-            t::Clear(t::ClearType::All),
-            e::EnableMouseCapture,
-            e::EnableFocusChange,
-        )?;
-        t::enable_raw_mode()?;
-        Ok(())
-    }
-}
 
-fn main() {
-    while true {
-        Terminal::new().init();
-    }
+    Ok(())
 }
