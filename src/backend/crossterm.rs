@@ -3,7 +3,7 @@
 //! Requires feature `crossterm-backend`
 #![cfg(feature = "crossterm")]
 
-pub use crossterm::cursor::CursorShape;
+pub use crossterm::cursor::SetCursorStyle;
 use crossterm::{cursor as c, event as e, execute, queue, style as s, terminal as t};
 use std::io::{BufWriter, Stdout, Write};
 use std::time::Duration;
@@ -197,12 +197,12 @@ impl Backend for CrosstermBackend {
         Ok(c::position()?.into())
     }
 
-    /// Queue cursor shape to be updated
+    /// Queue cursor style to be updated
     ///
-    /// * `shape`: Shape of the cursor
+    /// * `style`: Style of the cursor
     /// * `blink`: Whether or not cursor should blink
-    fn cursor_shape(&mut self, shape: CursorShape, blink: bool) -> BResult<()> {
-        queue!(self.buffer, c::SetCursorShape(shape))?;
+    fn cursor_shape(&mut self, style: SetCursorStyle, blink: bool) -> BResult<()> {
+        queue!(self.buffer, style)?;
         if blink {
             Ok(queue!(self.buffer, c::EnableBlinking)?)
         } else {

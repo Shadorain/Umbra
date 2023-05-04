@@ -2,7 +2,7 @@ use std::io;
 use thiserror::Error;
 
 mod crossterm;
-pub use self::crossterm::{CrosstermBackend, CursorShape};
+pub use self::crossterm::{CrosstermBackend, SetCursorStyle};
 
 use crate::{screen::{Size, Point, DrawBuffer}, IEvent};
 
@@ -39,7 +39,7 @@ pub trait Backend {
     fn cursor_hide(&mut self) -> BResult<()>;
     fn cursor_get(&mut self) -> BResult<Point>;
     fn cursor_set(&mut self, point: Point) -> BResult<()>;
-    fn cursor_shape(&mut self, shape: CursorShape, blink: bool) -> BResult<()>;
+    fn cursor_shape(&mut self, style: SetCursorStyle, blink: bool) -> BResult<()>;
 }
 
 /// Trait for setting internal backend
