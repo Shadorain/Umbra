@@ -3,12 +3,15 @@
 //! Requires feature `crossterm-backend`
 #![cfg(feature = "crossterm")]
 
-pub use crossterm::cursor::SetCursorStyle;
 use crossterm::{cursor as c, event as e, execute, queue, style as s, terminal as t};
+pub use crossterm::{
+    cursor::SetCursorStyle,
+    style::{StyledContent, Stylize},
+};
 use std::io::{BufWriter, Stdout, Write};
 use std::time::Duration;
 
-use super::{DrawBuffer, Point, Size};
+use super::{Cell, Direction, Distance, Point, Size};
 use crate::event::{Key, KeyModifiers, MediaKey};
 use crate::IEvent;
 
@@ -159,9 +162,18 @@ impl Backend for CrosstermBackend {
     ///
     /// * `pos`: Position to draw to
     /// * `buf`: DrawBuffer item to draw
-    fn draw_at<'a>(&mut self, pos: impl Into<Point>, buf: impl Into<DrawBuffer<'a>>) -> BResult<()> {
-        let pos = pos.into();
-        Ok(queue!(self.buffer, c::MoveTo(pos.x, pos.y), s::Print(buf.into()))?)
+    fn draw_at(&mut self, buf: &dyn Iterator<Item = (Point, Cell)>) -> BResult<()> {
+        // let mut prev_pos: Point = Point::default();
+        // let mut prev_pos: Option<Point> = None;
+        for (pos, cell) in buf.into_iter() {
+            // if !matches!(prev_pos, Some(p) if pos.x == p.x + 1 && pos.y == p.y) {
+            //     queue!(self.buffer, c::MoveTo(pos.x, pos.y))?;
+            // }
+            // prev_pos = Some(pos);
+            // queue!(self.buffer, s::Print(cell))?;
+            queue!(self.buffer, c::MoveTo(pos.x, pos.y), s::Print(cell))?;
+        }
+        Ok(())
     }
 
     /// Sets the window's title
@@ -203,6 +215,18 @@ impl Backend for CrosstermBackend {
          * write to the buffer myself. */
         // Ok(self.buffer.write_all(b"\x1B[6n")?)
         Ok(c::position()?.into())
+    }
+
+    /// Queue cursor position to be updated
+    ///
+    /// * `Point`: Position of the cursor
+    fn cursor_move(&mut self, distance: Distance) -> BResult<()> {
+        Ok(match distance.0 {
+            Direction::Up => queue!(self.buffer, c::MoveUp(distance.1)),
+            Direction::Right => queue!(self.buffer, c::MoveRight(distance.1)),
+            Direction::Down => queue!(self.buffer, c::MoveDown(distance.1)),
+            Direction::Left => queue!(self.buffer, c::MoveLeft(distance.1)),
+        }?)
     }
 
     /// Queue cursor style to be updated

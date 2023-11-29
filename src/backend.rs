@@ -1,11 +1,12 @@
-use std::io;
+use std::{fmt::Display, io, ops::Deref};
 use thiserror::Error;
 
 mod crossterm;
-pub use self::crossterm::{CrosstermBackend, SetCursorStyle};
+pub use self::crossterm::{CrosstermBackend, SetCursorStyle, Stylize};
+// use self::crossterm::StyledContent;
 use super::IEvent;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, PartialEq)]
 pub struct Coords<T> {
     pub x: T,
     pub y: T,
@@ -24,30 +25,163 @@ impl<T> Coords<T> {
 }
 
 pub type Point = Coords<u16>;
+impl Point {
+    pub fn from_index(index: usize, size: Size) -> Self {
+        let y = (index as f32 / size.x as f32).floor() as usize;
+        let x = index - (y * size.x as usize);
+        Self {
+            x: x as u16,
+            y: y as u16,
+        }
+    }
+    pub fn to_index(self, size: Size) -> usize {
+        (self.y * size.x + self.x) as usize
+    }
+}
+
 pub type Size = Coords<u16>;
 
-#[allow(dead_code)]
-pub struct DrawBuffer<'a> {
-    buf: &'a str,
+#[derive(Default, Clone, Copy, PartialEq)]
+pub struct Rect {
+    pub point: Point,
+    pub width: u16,
+    pub height: u16,
 }
+impl Deref for Rect {
+    type Target = Point;
 
-impl<'a> DrawBuffer<'a> {
-    pub fn new(buf: &'a str) -> Self {
-        Self { buf }
+    fn deref(&self) -> &Self::Target {
+        &self.point
+    }
+}
+impl Rect {
+    pub fn area(&self) -> u16 {
+        self.width * self.height
+    }
+    pub fn size(&self) -> Size {
+        Size {
+            x: self.width,
+            y: self.height,
+        }
+    }
+    pub fn intersects(&self, rect: &Self) -> bool {
+        self.x < rect.x + rect.width
+            && rect.x < self.x + self.width
+            && self.y < rect.y + rect.height
+            && rect.y < self.y + self.height
     }
 }
 
-impl<'a> From<&'a str> for DrawBuffer<'a> {
-    fn from(buf: &'a str) -> Self {
-        Self { buf }
-    }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cell {
+    pub glyph: char,
 }
 
-impl<'a> std::fmt::Display for DrawBuffer<'a> {
+impl Display for Cell {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{0}", self.buf)
+        write!(f, "{}", self.glyph)
     }
 }
+
+impl Default for Cell {
+    fn default() -> Self {
+        Self { glyph: ' ' }
+    }
+}
+
+impl Cell {
+    pub fn new(glyph: char) -> Self {
+        Self { glyph }
+    }
+}
+
+pub struct Terminal {
+    backend: Box<dyn Backend>,
+    buffer: Buffer,
+}
+impl Default for Terminal {
+    fn default() -> Self {
+        Self {
+            backend: Box::new(CrosstermBackend::default()),
+            buffer: Default::default(),
+        }
+    }
+}
+impl Terminal {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn draw(&self, rect: Rect, content: impl IntoIterator<Item = Cell>) {
+        if let Some(c) = self.buffer.diff(rect, content) {
+            self.backend.draw_at(&c.into_iter());
+        }
+    }
+    pub fn read_event(&self) -> BResult<Option<IEvent>> {
+        let event = self.backend.read_event()?;
+        if let Some(e) = event {
+            match e {
+                IEvent::Resize(r) => self.buffer.resize(r),
+                _ => (),
+            }
+        }
+        Ok(event)
+    }
+
+    pub fn update(&mut self) -> BResult<()> {
+        self.backend.refresh()
+    }
+}
+
+/// Collection of `Cell`s directly rendered to the backend.
+#[derive(Default)]
+pub struct Buffer {
+    frame: Rect,
+    cells: Vec<Cell>,
+}
+
+impl Buffer {
+    pub fn new(frame: Rect) -> Self {
+        Self {
+            frame,
+            cells: vec![Cell::default(); frame.area() as usize],
+        }
+    }
+
+    pub fn diff(
+        &self,
+        rect: Rect,
+        content: impl IntoIterator<Item = Cell>,
+    ) -> Option<Vec<(Point, Cell)>> {
+        let mut changes: Vec<(Point, Cell)> = Vec::new();
+        let index = rect.to_index(self.frame.size());
+        for (i, cell) in content.into_iter().enumerate() {
+            if cell != self.get_at(index + i) {
+                changes.push((Point::from_index(index + i, self.frame.size()), cell));
+            }
+        }
+        if !changes.is_empty() {
+            Some(changes)
+        } else {
+            None
+        }
+    }
+
+    pub fn resize(&mut self, size: Size) {}
+
+    fn get_at(&self, index: usize) -> Cell {
+        self.cells[index]
+    }
+}
+
+pub enum Direction {
+    Up,
+    Right,
+    Down,
+    Left,
+}
+
+pub struct Distance(pub Direction, pub u16);
 
 #[derive(Error, Debug)]
 pub enum BError {
@@ -72,7 +206,7 @@ pub trait Backend {
     fn read_event(&self) -> BResult<Option<IEvent>>;
     fn refresh(&mut self) -> BResult<()>;
 
-    fn draw_at<'a>(&mut self, pos: impl Into<Point>, buf: impl Into<DrawBuffer<'a>>) -> BResult<()>;
+    fn draw_at(&mut self, buf: &dyn Iterator<Item = (Point, Cell)>) -> BResult<()>;
 
     fn set_title(&mut self, title: &str) -> BResult<()>;
     fn screen_size(&mut self) -> Size;
@@ -82,6 +216,7 @@ pub trait Backend {
     fn cursor_hide(&mut self) -> BResult<()>;
     fn cursor_get(&mut self) -> BResult<Point>;
     fn cursor_set(&mut self, point: Point) -> BResult<()>;
+    fn cursor_move(&mut self, distance: Distance) -> BResult<()>;
     fn cursor_style(&mut self, style: SetCursorStyle, blink: bool) -> BResult<()>;
 }
 
